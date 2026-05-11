@@ -31,6 +31,7 @@ LARK_BASE = 'https://open.larksuite.com/open-apis'
 app = Flask(__name__)
 _token = {'val': None, 'exp': 0}
 _dedup = {}
+_recent = []  # ring buffer of last 30 webhook hits
 
 
 def lark_decrypt(encrypted_str: str, key: str) -> dict:
@@ -93,6 +94,9 @@ def reply_lark(message_id: str, text: str) -> dict:
 @app.route('/webhook', methods=['POST'])
 def webhook():
     raw = request.get_json(silent=True) or {}
+    _recent.append({'ts': time.time(), 'body': raw})
+    if len(_recent) > 30:
+        _recent.pop(0)
 
     if 'encrypt' in raw:
         if not LARK_ENCRYPT_KEY:
@@ -158,6 +162,11 @@ def webhook():
 @app.route('/', methods=['GET'])
 def home():
     return f'Mai HR Bot OK | encrypt={"on" if LARK_ENCRYPT_KEY else "off"} | token={"on" if LARK_VERIFICATION_TOKEN else "off"}'
+
+
+@app.route('/recent', methods=['GET'])
+def recent():
+    return jsonify(_recent)
 
 
 @app.route('/diag', methods=['GET'])
