@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: mai-hr-bot
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 90 webhook:app
+    healthCheckPath: /
+    envVars:
+      - key: LARK_APP_ID
+        value: cli_a971310b12b8deea
+      - key: LARK_APP_SECRET
+        sync: false
+      - key: LARK_ENCRYPT_KEY
+        value: ""
+      - key: LARK_VERIFICATION_TOKEN
+        value: ""
+      - key: DIFY_API_KEY
+        sync: false
+      - key: DIFY_BASE
+        value: https://api.dify.ai/v1
+      - key: PYTHON_VERSION
+        value: "3.11"

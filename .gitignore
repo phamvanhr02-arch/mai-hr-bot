@@ -1,0 +1,12 @@
+.env
+.env.local
+*.log
+.playwright_profile/
+screenshots/
+__pycache__/
+*.pyc
+*.pyo
+cloudflared.exe
+diag_output.txt
+server.log
+tunnel.log
