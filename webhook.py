@@ -169,6 +169,58 @@ def recent():
     return jsonify(_recent)
 
 
+@app.route('/bot-info', methods=['GET'])
+def bot_info():
+    """Query Lark for bot self-info to verify capabilities."""
+    try:
+        token = get_tenant_token()
+        r = requests.get(
+            f'{LARK_BASE}/bot/v3/info',
+            headers={'Authorization': f'Bearer {token}'},
+            timeout=10,
+        )
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/app-info', methods=['GET'])
+def app_info():
+    """Query Lark for app info — version status, scope, etc."""
+    try:
+        token = get_tenant_token()
+        r = requests.get(
+            f'{LARK_BASE}/application/v6/applications/{LARK_APP_ID}',
+            headers={'Authorization': f'Bearer {token}'},
+            params={'lang': 'en_us'},
+            timeout=10,
+        )
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/send-test/<open_id>', methods=['GET'])
+def send_test(open_id):
+    """Send a test DM directly via Lark API. Verifies bot can SEND DM."""
+    try:
+        token = get_tenant_token()
+        r = requests.post(
+            f'{LARK_BASE}/im/v1/messages',
+            headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json; charset=utf-8'},
+            params={'receive_id_type': 'open_id'},
+            json={
+                'receive_id': open_id,
+                'msg_type': 'text',
+                'content': json.dumps({'text': 'Tin nhắn test từ webhook diag — bot CÓ thể gửi DM. Nếu bạn nhận được tin này, vấn đề là ở receive side.'}),
+            },
+            timeout=10,
+        )
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/diag', methods=['GET'])
 def diag():
     """Diagnostic endpoint — test Dify + Lark credentials end-to-end."""
