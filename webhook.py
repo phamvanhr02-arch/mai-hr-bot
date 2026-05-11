@@ -160,6 +160,33 @@ def home():
     return f'Mai HR Bot OK | encrypt={"on" if LARK_ENCRYPT_KEY else "off"} | token={"on" if LARK_VERIFICATION_TOKEN else "off"}'
 
 
+@app.route('/diag', methods=['GET'])
+def diag():
+    """Diagnostic endpoint — test Dify + Lark credentials end-to-end."""
+    report = {
+        'lark_app_id': LARK_APP_ID or '(missing)',
+        'lark_app_secret_set': bool(LARK_APP_SECRET),
+        'dify_api_key_set': bool(DIFY_API_KEY),
+        'dify_base': DIFY_BASE,
+    }
+
+    try:
+        token = get_tenant_token()
+        report['lark_auth'] = 'ok'
+        report['lark_token_prefix'] = (token or '')[:10] + '...'
+    except Exception as e:
+        report['lark_auth'] = f'FAIL: {e}'
+
+    try:
+        ans = call_dify('test ping', 'diag_user')
+        report['dify_call'] = 'ok'
+        report['dify_answer_preview'] = (ans or '')[:200]
+    except Exception as e:
+        report['dify_call'] = f'FAIL: {e}'
+
+    return jsonify(report)
+
+
 if __name__ == '__main__':
     missing = [k for k, v in {
         'LARK_APP_ID': LARK_APP_ID,
